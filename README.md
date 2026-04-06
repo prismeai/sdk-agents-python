@@ -1,11 +1,11 @@
-# prismeai
+# prismeai-sdk-agents
 
 Official Python SDK for the [Prisme.ai](https://prisme.ai) Agent Factory and Storage APIs.
 
 ## Installation
 
 ```bash
-pip install prismeai
+pip install prismeai-sdk-agents
 ```
 
 ## Quick Start
