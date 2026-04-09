@@ -12,7 +12,8 @@ class Stats:
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
     def get(self, *, period: Optional[str] = None) -> Any:
         params: dict[str, Any] = {}
-        if period: params["period"] = period
+        if period:
+            params["period"] = period
         return self._client.get(self._path("stats"), params=params)
 
 class AsyncStats:
@@ -24,5 +25,6 @@ class AsyncStats:
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
     async def get(self, *, period: Optional[str] = None) -> Any:
         params: dict[str, Any] = {}
-        if period: params["period"] = period
+        if period:
+            params["period"] = period
         return await self._client.get(self._path("stats"), params=params)

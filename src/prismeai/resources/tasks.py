@@ -13,7 +13,8 @@ class Tasks:
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
     def list(self, agent_id: str, *, page: Optional[int] = None, limit: Optional[int] = None, status: Optional[str] = None) -> SyncCursorPage[Any]:
         params: dict[str, Any] = {}
-        if status: params["status"] = status
+        if status:
+            params["status"] = status
         return SyncCursorPage(self._client, "GET", self._path("agents", agent_id, "tasks"), params=params, page_size=limit or 20, start_page=page or 1)
     def get(self, agent_id: str, task_id: str) -> Any:
         return self._client.get(self._path("agents", agent_id, "tasks", task_id))
@@ -33,7 +34,8 @@ class AsyncTasks:
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
     def list(self, agent_id: str, *, page: Optional[int] = None, limit: Optional[int] = None, status: Optional[str] = None) -> AsyncCursorPage[Any]:
         params: dict[str, Any] = {}
-        if status: params["status"] = status
+        if status:
+            params["status"] = status
         return AsyncCursorPage(self._client, "GET", self._path("agents", agent_id, "tasks"), params=params, page_size=limit or 20, start_page=page or 1)
     async def get(self, agent_id: str, task_id: str) -> Any:
         return await self._client.get(self._path("agents", agent_id, "tasks", task_id))

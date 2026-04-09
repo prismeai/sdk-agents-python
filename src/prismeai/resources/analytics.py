@@ -12,8 +12,10 @@ class Analytics:
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
     def get(self, agent_id: str, *, period: Optional[str] = None, granularity: Optional[str] = None) -> Any:
         params: dict[str, Any] = {}
-        if period: params["period"] = period
-        if granularity: params["granularity"] = granularity
+        if period:
+            params["period"] = period
+        if granularity:
+            params["granularity"] = granularity
         return self._client.get(self._path("agents", agent_id, "analytics"), params=params)
 
 class AsyncAnalytics:
@@ -25,6 +27,8 @@ class AsyncAnalytics:
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
     async def get(self, agent_id: str, *, period: Optional[str] = None, granularity: Optional[str] = None) -> Any:
         params: dict[str, Any] = {}
-        if period: params["period"] = period
-        if granularity: params["granularity"] = granularity
+        if period:
+            params["period"] = period
+        if granularity:
+            params["granularity"] = granularity
         return await self._client.get(self._path("agents", agent_id, "analytics"), params=params)

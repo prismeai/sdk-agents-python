@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 import math
 import random
-from typing import Any, Optional, TypeVar, Type, Union
+from typing import Any, Optional, TypeVar
 
 import httpx
 

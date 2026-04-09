@@ -13,7 +13,8 @@ class Profiles:
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
     def list(self, *, page: Optional[int] = None, limit: Optional[int] = None, search: Optional[str] = None) -> SyncCursorPage[Any]:
         params: dict[str, Any] = {}
-        if search: params["search"] = search
+        if search:
+            params["search"] = search
         return SyncCursorPage(self._client, "GET", self._path("profiles"), params=params, page_size=limit or 20, start_page=page or 1)
 
 class AsyncProfiles:
@@ -25,5 +26,6 @@ class AsyncProfiles:
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
     def list(self, *, page: Optional[int] = None, limit: Optional[int] = None, search: Optional[str] = None) -> AsyncCursorPage[Any]:
         params: dict[str, Any] = {}
-        if search: params["search"] = search
+        if search:
+            params["search"] = search
         return AsyncCursorPage(self._client, "GET", self._path("profiles"), params=params, page_size=limit or 20, start_page=page or 1)
