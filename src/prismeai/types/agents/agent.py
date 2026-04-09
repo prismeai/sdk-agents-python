@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Optional, List, Union
+from typing import Optional, List, Union
 from pydantic import BaseModel, ConfigDict
 from .sub_agent import SubAgentConfig
 from .guardrail import GuardrailConfig
