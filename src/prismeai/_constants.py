@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-DEFAULT_BASE_URL = "https://api.prisme.ai/v2"
+DEFAULT_BASE_URL = "https://api.studio.prisme.ai/v2"
 DEFAULT_TIMEOUT = 60.0
 DEFAULT_MAX_RETRIES = 2
 INITIAL_RETRY_DELAY = 0.5
