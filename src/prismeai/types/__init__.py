@@ -31,12 +31,13 @@ from .a2a import A2ASend as A2ASend, A2AResponse as A2AResponse, A2ACard as A2AC
 from .artifacts import Artifact as Artifact, ArtifactUpdate as ArtifactUpdate
 from .shares import Share as Share
 from .files import FileObject as FileObject
-from .vector_stores import (
-    VectorStore as VectorStore,
-    VectorStoreCreate as VectorStoreCreate,
-    VectorStoreUpdate as VectorStoreUpdate,
-    VectorStoreSearchResult as VectorStoreSearchResult,
-    VSFile as VSFile,
-    VSAccessEntry as VSAccessEntry,
+from .knowledge_bases import (
+    KnowledgeBase as KnowledgeBase,
+    KnowledgeBaseCreate as KnowledgeBaseCreate,
+    KnowledgeBaseUpdate as KnowledgeBaseUpdate,
+    SearchHit as SearchHit,
+    Document as Document,
+    AccessBinding as AccessBinding,
+    WebSource as WebSource,
 )
 from .skills import Skill as Skill, SkillCreate as SkillCreate, SkillUpdate as SkillUpdate

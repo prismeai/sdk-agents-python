@@ -20,7 +20,7 @@ from .resources.activity import AsyncActivity
 from .resources.profiles import AsyncProfiles
 from .resources.orgs import AsyncOrgs
 from .resources.files import AsyncFiles
-from .resources.vector_stores import AsyncVectorStores
+from .resources.knowledge_bases import AsyncKnowledgeBases
 from .resources.skills import AsyncSkills
 from .resources.stats import AsyncStats
 
@@ -52,7 +52,7 @@ class AsyncPrismeAI:
     profiles: AsyncProfiles
     orgs: AsyncOrgs
     files: AsyncFiles
-    vector_stores: AsyncVectorStores
+    knowledge_bases: AsyncKnowledgeBases
     skills: AsyncSkills
     stats: AsyncStats
 
@@ -93,7 +93,7 @@ class AsyncPrismeAI:
 
         # Storage resources
         self.files = AsyncFiles(client, STORAGE_SLUG)
-        self.vector_stores = AsyncVectorStores(client, STORAGE_SLUG)
+        self.knowledge_bases = AsyncKnowledgeBases(client, STORAGE_SLUG)
         self.skills = AsyncSkills(client, STORAGE_SLUG)
         self.stats = AsyncStats(client, STORAGE_SLUG)
 

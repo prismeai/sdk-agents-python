@@ -41,7 +41,7 @@ def default_extractor(body: Any) -> PageResponse[Any]:
     total = body.get("total")
     page = body.get("page")
     limit = body.get("limit")
-    has_more = body.get("hasMore")
+    has_more = body.get("hasMore", body.get("has_more"))
 
     if has_more is None and total is not None and page is not None and limit is not None:
         has_more = page * limit < total
