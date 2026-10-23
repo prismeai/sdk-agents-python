@@ -28,6 +28,7 @@ class Files:
     def _path(self, *segments: str) -> str:
         return "/".join([f"/workspaces/slug:{self._workspace_id}/files", *segments])
     def list(self, *, limit: Optional[int] = None) -> SyncCursorPage[Any]:
+        """List every file of the storage workspace. Requires edit rights on the storage workspace."""
         # The files API numbers its pages from 0.
         return SyncCursorPage(self._client, "GET", self._path(), extractor=_list_extractor, page_size=limit or 20, start_page=0)
     def upload(self, file: FileInput, *, filename: Optional[str] = None, content_type: Optional[str] = None, metadata: Optional[dict[str, Any]] = None) -> Any:
@@ -35,6 +36,8 @@ class Files:
     def get(self, file_id: str) -> Any:
         return self._client.get(self._path(file_id))
     def delete(self, file_id: str) -> None:
+        """Delete a file. Requires edit rights on the storage workspace; to remove an indexed file,
+        delete its document from the knowledge base instead."""
         self._client.delete(self._path(file_id))
     def download(self, file_id: str) -> Any:
         path = self.get(file_id)["path"]
@@ -47,6 +50,7 @@ class AsyncFiles:
     def _path(self, *segments: str) -> str:
         return "/".join([f"/workspaces/slug:{self._workspace_id}/files", *segments])
     def list(self, *, limit: Optional[int] = None) -> AsyncCursorPage[Any]:
+        """List every file of the storage workspace. Requires edit rights on the storage workspace."""
         # The files API numbers its pages from 0.
         return AsyncCursorPage(self._client, "GET", self._path(), extractor=_list_extractor, page_size=limit or 20, start_page=0)
     async def upload(self, file: FileInput, *, filename: Optional[str] = None, content_type: Optional[str] = None, metadata: Optional[dict[str, Any]] = None) -> Any:
@@ -54,6 +58,8 @@ class AsyncFiles:
     async def get(self, file_id: str) -> Any:
         return await self._client.get(self._path(file_id))
     async def delete(self, file_id: str) -> None:
+        """Delete a file. Requires edit rights on the storage workspace; to remove an indexed file,
+        delete its document from the knowledge base instead."""
         await self._client.delete(self._path(file_id))
     async def download(self, file_id: str) -> Any:
         path = (await self.get(file_id))["path"]
