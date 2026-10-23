@@ -176,10 +176,10 @@ file = client.files.get(file["id"])
 data = client.files.download(file["id"]).content
 ```
 
-`client.files.list()` and `client.files.delete()` require edit rights on the Storage workspace.
-To remove an indexed file, delete its document from the knowledge base
+`client.files.delete()` deletes a file you uploaded that no document uses; it answers 409 while a
+document does. To remove an indexed file, delete its document from the knowledge base
 (`client.knowledge_bases.documents.delete`): the uploaded file is removed with it once no other
-document uses it.
+document uses it. `client.files.list()` requires edit rights on the Storage workspace.
 
 ### Knowledge Bases (Storage)
 
