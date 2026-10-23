@@ -118,6 +118,14 @@ class TestKnowledgeBases:
         assert page._page_size == 10
         assert page._start_page == 2
 
+    def test_list_with_filters(self):
+        client = _mock_client()
+        KnowledgeBases(client, WS).list(scope="owned,shared", status="active", search="faq").get_page()
+        assert client.request.call_args.kwargs["params"] == {
+            "name": None, "search": "faq", "agent_id": None, "scope": "owned,shared", "status": "active",
+            "page": 1, "limit": 20,
+        }
+
     def test_create(self):
         client = _mock_client()
         KnowledgeBases(client, WS).create(name="my-kb", description="docs")
@@ -126,7 +134,12 @@ class TestKnowledgeBases:
     def test_get(self):
         client = _mock_client()
         KnowledgeBases(client, WS).get("vs_1")
-        client.get.assert_called_once_with(f"{KB}/vs_1")
+        client.get.assert_called_once_with(f"{KB}/vs_1", params={"include": None})
+
+    def test_get_include_processing(self):
+        client = _mock_client()
+        KnowledgeBases(client, WS).get("vs_1", include="processing")
+        client.get.assert_called_once_with(f"{KB}/vs_1", params={"include": "processing"})
 
     def test_update(self):
         client = _mock_client()
@@ -165,6 +178,20 @@ class TestKBDocuments:
         assert page._page_size == 5
         assert page._start_page == 2
 
+    def test_list_with_filters_and_tags(self):
+        client = _mock_client()
+        KBDocuments(client, WS).list(
+            "vs_1", status="failed,rejected", source_type="web_page", updated_before=1700000000,
+            tags={"project": "x", "team": "docs"},
+        ).get_page()
+        params = client.request.call_args.kwargs["params"]
+        assert params["status"] == "failed,rejected"
+        assert params["source_type"] == "web_page"
+        assert params["updated_before"] == 1700000000
+        assert params["tags.project"] == "x"
+        assert params["tags.team"] == "docs"
+        assert "tags" not in params
+
     def test_add_native_file(self):
         client = _mock_client()
         KBDocuments(client, WS).add("vs_1", native_file_id="file-1", tags={"team": "docs"})
@@ -176,6 +203,13 @@ class TestKBDocuments:
         client = _mock_client()
         KBDocuments(client, WS).get("vs_1", "vsf_1")
         client.get.assert_called_once_with(f"{KB}/vs_1/documents/vsf_1")
+
+    def test_update(self):
+        client = _mock_client()
+        KBDocuments(client, WS).update("vs_1", "vsf_1", tags={"team": "docs"}, filename="faq.md")
+        client.patch.assert_called_once_with(
+            f"{KB}/vs_1/documents/vsf_1", json={"tags": {"team": "docs"}, "filename": "faq.md"}
+        )
 
     def test_delete(self):
         client = _mock_client()

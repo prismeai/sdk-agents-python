@@ -171,13 +171,15 @@ Files are uploaded privately to the Storage workspace and belong to the authenti
 # Upload a file (path, bytes, file object or (name, data) tuple), with optional metadata
 file = client.files.upload("handbook.pdf", metadata={"team": "docs"})
 
-# Get, download (raw HTTP response), delete
+# Get, download (raw HTTP response)
 file = client.files.get(file["id"])
 data = client.files.download(file["id"]).content
-client.files.delete(file["id"])
 ```
 
-`client.files.list()` returns every file of the Storage workspace and requires admin rights on it.
+`client.files.list()` and `client.files.delete()` require edit rights on the Storage workspace.
+To remove an indexed file, delete its document from the knowledge base
+(`client.knowledge_bases.documents.delete`): the uploaded file is removed with it once no other
+document uses it.
 
 ### Knowledge Bases (Storage)
 
@@ -196,6 +198,14 @@ client.knowledge_bases.documents.add(kb["id"], source_url="https://example.com/f
 doc = client.knowledge_bases.documents.get(kb["id"], doc["id"])
 print(doc["status"])  # queued, in_progress, completed, failed, ...
 
+# List and filter
+kbs = client.knowledge_bases.list(scope="owned", search="handbook")
+failed = client.knowledge_bases.documents.list(kb["id"], status="failed", tags={"team": "docs"})
+kb = client.knowledge_bases.get(kb["id"], include="processing")  # adds live processing status
+
+# Update document tags, metadata, expiry or filename
+client.knowledge_bases.documents.update(kb["id"], doc["id"], tags={"team": "support"})
+
 # Search
 results = client.knowledge_bases.search(kb["id"], query="How to reset password?", limit=5)
 for hit in results["data"]:
@@ -206,6 +216,9 @@ client.knowledge_bases.web_sources.add(kb["id"], url="https://example.com/docs")
 
 # Share
 client.knowledge_bases.access.grant(kb["id"], principal_type="user", principal_id="user-id", role="reader")
+
+# Remove a document, with its uploaded file once no other document uses it
+client.knowledge_bases.documents.delete(kb["id"], doc["id"])
 ```
 
 ### Pagination
@@ -285,7 +298,7 @@ existing vector store ids (`vs_...`) are valid knowledge base ids.
 | `vector_stores.list/create/get/update/delete/search` | `knowledge_bases.list/create/get/update/delete/search` |
 | `vector_stores.reindex(id)` | `knowledge_bases.reindex(id, **options)`, returns the dispatch status |
 | `vector_stores.crawl_status` / `recrawl` | `knowledge_bases.web_sources.list/add/get/delete`; new pages are discovered on the crawl schedule |
-| `vector_stores.files.list/add/get/delete` | `knowledge_bases.documents.list/add/get/delete` |
+| `vector_stores.files.list/add/get/delete` | `knowledge_bases.documents.list/add/get/update/delete` |
 | `vector_stores.files.chunks` | `knowledge_bases.documents.chunks`, now an auto-paginating iterable |
 | `vector_stores.files.reindex(id, file_id)` | `knowledge_bases.documents.reindex(id, document_id, **options)`, returns the document |
 | `vector_stores.access.list/grant/revoke` | `knowledge_bases.access.list/grant/revoke`, plus `update(id, principal_type, principal_id, role=...)` to change a role |

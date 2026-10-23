@@ -49,6 +49,14 @@ def default_extractor(body: Any) -> PageResponse[Any]:
     return PageResponse(data=data, total=total, page=page, limit=limit, has_more=has_more)
 
 
+def _is_last_page(result: PageResponse[Any], page_size: int) -> bool:
+    if not result.data or result.has_more is False:
+        return True
+    # The server may cap `limit` below the requested page size, so a short page only ends the
+    # listing when the server did not report more.
+    return result.has_more is not True and len(result.data) < page_size
+
+
 class SyncCursorPage(Generic[T]):
     """Synchronous paginator — iterable over individual items across pages."""
 
@@ -84,7 +92,7 @@ class SyncCursorPage(Generic[T]):
         while True:
             result = self.get_page(page)
             yield from result.data
-            if len(result.data) < self._page_size or result.has_more is False:
+            if _is_last_page(result, self._page_size):
                 break
             page += 1
 
@@ -128,6 +136,6 @@ class AsyncCursorPage(Generic[T]):
             result = await self.get_page(page)
             for item in result.data:
                 yield item
-            if len(result.data) < self._page_size or result.has_more is False:
+            if _is_last_page(result, self._page_size):
                 break
             page += 1

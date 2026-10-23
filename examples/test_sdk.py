@@ -590,14 +590,8 @@ def test_files():
 
     test("files.download", _download)
 
-    def _delete():
-        if not file_id:
-            log("Skipped — no fileId")
-            return
-        client.files.delete(file_id)
-        log("Deleted", {"id": file_id})
-
-    test("files.delete", _delete)
+    skip("files.list", "requires edit rights on the storage workspace")
+    skip("files.delete", "requires edit rights on the storage workspace")
 
 
 # ════════════════════════════════════════════════════════════════
@@ -606,7 +600,7 @@ def test_files():
 def test_knowledge_bases():
     print("\n── Storage: Knowledge Bases ───────────────────")
     kb_id = None
-    file_id = None
+    document_id = None
 
     def _create():
         nonlocal kb_id
@@ -645,13 +639,13 @@ def test_knowledge_bases():
     test("knowledgeBases.update", _update)
 
     def _add_document():
-        nonlocal file_id
+        nonlocal document_id
         if not kb_id:
             log("Skipped")
             return
         f = client.files.upload(b"Hello from Python SDK test!", filename="sdk-kb-test.txt")
-        file_id = f["id"]
-        doc = client.knowledge_bases.documents.add(kb_id, native_file_id=file_id)
+        doc = client.knowledge_bases.documents.add(kb_id, native_file_id=f["id"])
+        document_id = doc["id"]
         log("Added document", {"id": doc["id"], "status": doc.get("status")})
 
     test("knowledgeBases.documents.add", _add_document)
@@ -674,13 +668,20 @@ def test_knowledge_bases():
 
     test("knowledgeBases.search", _search)
 
+    def _delete_document():
+        if not kb_id or not document_id:
+            log("Skipped")
+            return
+        client.knowledge_bases.documents.delete(kb_id, document_id)
+        log("Deleted document", {"id": document_id})
+
+    test("knowledgeBases.documents.delete", _delete_document)
+
     def _delete():
         if not kb_id:
             log("Skipped")
             return
         client.knowledge_bases.delete(kb_id)
-        if file_id:
-            client.files.delete(file_id)
         log("Deleted", {"id": kb_id})
 
     test("knowledgeBases.delete", _delete)

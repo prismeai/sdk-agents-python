@@ -20,12 +20,25 @@ class KnowledgeBases:
     def _path(self, *segments: str) -> str:
         parts = "/".join(segments)
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
-    def list(self, *, page: Optional[int] = None, limit: Optional[int] = None) -> SyncCursorPage[Any]:
-        return SyncCursorPage(self._client, "GET", self._path("knowledge_bases"), page_size=limit or 20, start_page=page or 1)
+    def list(
+        self,
+        *,
+        page: Optional[int] = None,
+        limit: Optional[int] = None,
+        name: Optional[str] = None,
+        search: Optional[str] = None,
+        agent_id: Optional[str] = None,
+        scope: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> SyncCursorPage[Any]:
+        """List knowledge bases visible to the caller. `scope` is comma-separated: owned, shared, all, agents."""
+        params = {"name": name, "search": search, "agent_id": agent_id, "scope": scope, "status": status}
+        return SyncCursorPage(self._client, "GET", self._path("knowledge_bases"), params=params, page_size=limit or 20, start_page=page or 1)
     def create(self, **kwargs: Any) -> Any:
         return self._client.post(self._path("knowledge_bases"), json=kwargs)
-    def get(self, knowledge_base_id: str) -> Any:
-        return self._client.get(self._path("knowledge_bases", knowledge_base_id))
+    def get(self, knowledge_base_id: str, *, include: Optional[str] = None) -> Any:
+        """Get a knowledge base. Pass `include="processing"` for live crawl/processing status."""
+        return self._client.get(self._path("knowledge_bases", knowledge_base_id), params={"include": include})
     def update(self, knowledge_base_id: str, **kwargs: Any) -> Any:
         return self._client.patch(self._path("knowledge_bases", knowledge_base_id), json=kwargs)
     def delete(self, knowledge_base_id: str) -> None:
@@ -48,12 +61,25 @@ class AsyncKnowledgeBases:
     def _path(self, *segments: str) -> str:
         parts = "/".join(segments)
         return f"/workspaces/slug:{self._workspace_id}/webhooks/v1/{parts}"
-    def list(self, *, page: Optional[int] = None, limit: Optional[int] = None) -> AsyncCursorPage[Any]:
-        return AsyncCursorPage(self._client, "GET", self._path("knowledge_bases"), page_size=limit or 20, start_page=page or 1)
+    def list(
+        self,
+        *,
+        page: Optional[int] = None,
+        limit: Optional[int] = None,
+        name: Optional[str] = None,
+        search: Optional[str] = None,
+        agent_id: Optional[str] = None,
+        scope: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> AsyncCursorPage[Any]:
+        """List knowledge bases visible to the caller. `scope` is comma-separated: owned, shared, all, agents."""
+        params = {"name": name, "search": search, "agent_id": agent_id, "scope": scope, "status": status}
+        return AsyncCursorPage(self._client, "GET", self._path("knowledge_bases"), params=params, page_size=limit or 20, start_page=page or 1)
     async def create(self, **kwargs: Any) -> Any:
         return await self._client.post(self._path("knowledge_bases"), json=kwargs)
-    async def get(self, knowledge_base_id: str) -> Any:
-        return await self._client.get(self._path("knowledge_bases", knowledge_base_id))
+    async def get(self, knowledge_base_id: str, *, include: Optional[str] = None) -> Any:
+        """Get a knowledge base. Pass `include="processing"` for live crawl/processing status."""
+        return await self._client.get(self._path("knowledge_bases", knowledge_base_id), params={"include": include})
     async def update(self, knowledge_base_id: str, **kwargs: Any) -> Any:
         return await self._client.patch(self._path("knowledge_bases", knowledge_base_id), json=kwargs)
     async def delete(self, knowledge_base_id: str) -> None:
