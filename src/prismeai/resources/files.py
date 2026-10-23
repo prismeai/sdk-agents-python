@@ -36,9 +36,9 @@ class Files:
     def get(self, file_id: str) -> Any:
         return self._client.get(self._path(file_id))
     def delete(self, file_id: str) -> None:
-        """Delete a file. Requires edit rights on the storage workspace; to remove an indexed file,
-        delete its document from the knowledge base instead."""
-        self._client.delete(self._path(file_id))
+        """Delete a file you uploaded that no document uses (409 while one does: delete the document
+        from its knowledge base instead, which also releases the file)."""
+        self._client.delete(f"/workspaces/slug:{self._workspace_id}/webhooks/v1/files/{file_id}")
     def download(self, file_id: str) -> Any:
         path = self.get(file_id)["path"]
         return self._client.request("GET", f"/files/{quote(path)}", raw=True)
@@ -58,9 +58,9 @@ class AsyncFiles:
     async def get(self, file_id: str) -> Any:
         return await self._client.get(self._path(file_id))
     async def delete(self, file_id: str) -> None:
-        """Delete a file. Requires edit rights on the storage workspace; to remove an indexed file,
-        delete its document from the knowledge base instead."""
-        await self._client.delete(self._path(file_id))
+        """Delete a file you uploaded that no document uses (409 while one does: delete the document
+        from its knowledge base instead, which also releases the file)."""
+        await self._client.delete(f"/workspaces/slug:{self._workspace_id}/webhooks/v1/files/{file_id}")
     async def download(self, file_id: str) -> Any:
         path = (await self.get(file_id))["path"]
         return await self._client.request("GET", f"/files/{quote(path)}", raw=True)

@@ -80,10 +80,10 @@ class TestFiles:
         Files(client, WS).get("file-1")
         client.get.assert_called_once_with(f"{FILES}/file-1")
 
-    def test_delete(self):
+    def test_delete_goes_through_the_storage_route(self):
         client = _mock_client()
         Files(client, WS).delete("file-1")
-        client.delete.assert_called_once_with(f"{FILES}/file-1")
+        client.delete.assert_called_once_with(f"/workspaces/slug:{WS}/webhooks/v1/files/file-1")
 
     def test_download_fetches_file_path_through_api(self):
         client = _mock_client()
