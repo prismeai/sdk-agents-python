@@ -591,7 +591,14 @@ def test_files():
     test("files.download", _download)
 
     skip("files.list", "requires edit rights on the storage workspace")
-    skip("files.delete", "requires edit rights on the storage workspace")
+    def _delete():
+        if not file_id:
+            log("Skipped — no fileId")
+            return
+        client.files.delete(file_id)
+        log("Deleted", {"id": file_id})
+
+    test("files.delete", _delete)
 
 
 # ════════════════════════════════════════════════════════════════
