@@ -7,5 +7,6 @@ class FileObject(BaseModel):
     id: str
     name: str
     url: Optional[str] = None
-    mime_type: Optional[str] = None
+    mimetype: Optional[str] = None
     size: Optional[int] = None
+    path: Optional[str] = None

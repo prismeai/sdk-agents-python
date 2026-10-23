@@ -54,3 +54,9 @@ def test_sync_cursor_page_get_page():
     page = SyncCursorPage(mock_client, "GET", "/test", page_size=2)
     result = page.get_page(2)
     assert result.data == [3, 4]
+
+
+def test_default_extractor_snake_case_has_more():
+    result = default_extractor({"object": "list", "data": [1, 2], "total": 5, "page": 1, "limit": 2, "has_more": False})
+    assert result.data == [1, 2]
+    assert result.has_more is False
