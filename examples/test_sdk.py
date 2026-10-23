@@ -572,16 +572,6 @@ def test_files():
 
     test("files.upload", _upload)
 
-    def _list():
-        items = []
-        for f in client.files.list():
-            items.append({"id": f["id"], "name": f.get("name")})
-            if len(items) >= 3:
-                break
-        log("Listed", {"count": len(items)})
-
-    test("files.list", _list)
-
     def _get():
         if not file_id:
             log("Skipped — no fileId")
@@ -595,11 +585,12 @@ def test_files():
         if not file_id:
             log("Skipped — no fileId")
             return
-        data = client.files.download(file_id)
-        log("Downloaded", {"size": len(data) if data else 0})
+        data = client.files.download(file_id).content
+        log("Downloaded", {"size": len(data)})
 
     test("files.download", _download)
 
+    skip("files.list", "requires edit rights on the storage workspace")
     def _delete():
         if not file_id:
             log("Skipped — no fileId")
@@ -611,65 +602,96 @@ def test_files():
 
 
 # ════════════════════════════════════════════════════════════════
-# 17. STORAGE — Vector Stores
+# 17. STORAGE — Knowledge Bases
 # ════════════════════════════════════════════════════════════════
-def test_vector_stores():
-    print("\n── Storage: Vector Stores ─────────────────────")
-    vs_id = None
+def test_knowledge_bases():
+    print("\n── Storage: Knowledge Bases ───────────────────")
+    kb_id = None
+    document_id = None
 
     def _create():
-        nonlocal vs_id
-        vs = client.vector_stores.create(name=f"SDK-Py-Test-VS-{int(time.time())}")
-        vs_id = vs["id"]
-        log("Created", {"id": vs["id"], "name": vs.get("name")})
+        nonlocal kb_id
+        kb = client.knowledge_bases.create(name=f"SDK-Py-Test-KB-{int(time.time())}")
+        kb_id = kb["id"]
+        log("Created", {"id": kb["id"], "name": kb.get("name")})
 
-    test("vectorStores.create", _create)
+    test("knowledgeBases.create", _create)
 
     def _list():
         items = []
-        for vs in client.vector_stores.list():
-            items.append({"id": vs["id"], "name": vs.get("name")})
+        for kb in client.knowledge_bases.list():
+            items.append({"id": kb["id"], "name": kb.get("name")})
             if len(items) >= 3:
                 break
         log("Listed", {"count": len(items)})
 
-    test("vectorStores.list", _list)
+    test("knowledgeBases.list", _list)
 
     def _get():
-        if not vs_id:
+        if not kb_id:
             log("Skipped")
             return
-        vs = client.vector_stores.get(vs_id)
-        log("Got", {"id": vs["id"], "name": vs.get("name")})
+        kb = client.knowledge_bases.get(kb_id)
+        log("Got", {"id": kb["id"], "name": kb.get("name")})
 
-    test("vectorStores.get", _get)
+    test("knowledgeBases.get", _get)
 
     def _update():
-        if not vs_id:
+        if not kb_id:
             log("Skipped")
             return
-        vs = client.vector_stores.update(vs_id, name="SDK-Py-Test-VS-Updated")
-        log("Updated", {"id": vs["id"], "name": vs.get("name")})
+        kb = client.knowledge_bases.update(kb_id, name="SDK-Py-Test-KB-Updated")
+        log("Updated", {"id": kb["id"], "name": kb.get("name")})
 
-    test("vectorStores.update", _update)
+    test("knowledgeBases.update", _update)
+
+    def _add_document():
+        nonlocal document_id
+        if not kb_id:
+            log("Skipped")
+            return
+        f = client.files.upload(b"Hello from Python SDK test!", filename="sdk-kb-test.txt")
+        doc = client.knowledge_bases.documents.add(kb_id, native_file_id=f["id"])
+        document_id = doc["id"]
+        log("Added document", {"id": doc["id"], "status": doc.get("status")})
+
+    test("knowledgeBases.documents.add", _add_document)
+
+    def _list_documents():
+        if not kb_id:
+            log("Skipped")
+            return
+        docs = client.knowledge_bases.documents.list(kb_id).to_list()
+        log("Listed documents", {"count": len(docs)})
+
+    test("knowledgeBases.documents.list", _list_documents)
 
     def _search():
-        if not vs_id:
+        if not kb_id:
             log("Skipped")
             return
-        results = client.vector_stores.search(vs_id, query="test search", limit=3)
-        log("Searched", {"results": len(results) if results else 0})
+        results = client.knowledge_bases.search(kb_id, query="test search", limit=3)
+        log("Searched", {"results": len(results["data"])})
 
-    test("vectorStores.search", _search)
+    test("knowledgeBases.search", _search)
+
+    def _delete_document():
+        if not kb_id or not document_id:
+            log("Skipped")
+            return
+        client.knowledge_bases.documents.delete(kb_id, document_id)
+        log("Deleted document", {"id": document_id})
+
+    test("knowledgeBases.documents.delete", _delete_document)
 
     def _delete():
-        if not vs_id:
+        if not kb_id:
             log("Skipped")
             return
-        client.vector_stores.delete(vs_id)
-        log("Deleted", {"id": vs_id})
+        client.knowledge_bases.delete(kb_id)
+        log("Deleted", {"id": kb_id})
 
-    test("vectorStores.delete", _delete)
+    test("knowledgeBases.delete", _delete)
 
 
 # ════════════════════════════════════════════════════════════════
@@ -808,7 +830,7 @@ def main():
 
         # Storage
         test_files()
-        test_vector_stores()
+        test_knowledge_bases()
         test_skills()
         test_stats()
     except Exception as e:

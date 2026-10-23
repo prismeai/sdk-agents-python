@@ -13,7 +13,7 @@ from .activity import Activity, AsyncActivity
 from .profiles import Profiles, AsyncProfiles
 from .orgs import Orgs, AsyncOrgs
 from .files import Files, AsyncFiles
-from .vector_stores import VectorStores, AsyncVectorStores
+from .knowledge_bases import KnowledgeBases, AsyncKnowledgeBases
 from .skills import Skills, AsyncSkills
 from .stats import Stats, AsyncStats
 
@@ -33,7 +33,7 @@ __all__ = [
     "Profiles", "AsyncProfiles",
     "Orgs", "AsyncOrgs",
     "Files", "AsyncFiles",
-    "VectorStores", "AsyncVectorStores",
+    "KnowledgeBases", "AsyncKnowledgeBases",
     "Skills", "AsyncSkills",
     "Stats", "AsyncStats",
     "FileAttachment",

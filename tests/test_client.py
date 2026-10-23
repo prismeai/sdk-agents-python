@@ -18,7 +18,7 @@ def test_sync_client_creation():
     assert client.profiles is not None
     assert client.orgs is not None
     assert client.files is not None
-    assert client.vector_stores is not None
+    assert client.knowledge_bases is not None
     assert client.skills is not None
     assert client.stats is not None
 
@@ -26,7 +26,7 @@ def test_sync_client_creation():
 def test_sync_client_with_storage():
     client = PrismeAI(api_key="test-key")
     assert client.files is not None
-    assert client.vector_stores is not None
+    assert client.knowledge_bases is not None
 
 
 def test_sync_client_bearer_token():
@@ -47,7 +47,7 @@ def test_async_client_creation():
     assert client.agents is not None
     assert client.tasks is not None
     assert client.files is not None
-    assert client.vector_stores is not None
+    assert client.knowledge_bases is not None
 
 
 def test_sync_client_context_manager():

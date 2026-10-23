@@ -20,7 +20,7 @@ from .resources.activity import Activity
 from .resources.profiles import Profiles
 from .resources.orgs import Orgs
 from .resources.files import Files
-from .resources.vector_stores import VectorStores
+from .resources.knowledge_bases import KnowledgeBases
 from .resources.skills import Skills
 from .resources.stats import Stats
 
@@ -59,7 +59,7 @@ class PrismeAI:
     profiles: Profiles
     orgs: Orgs
     files: Files
-    vector_stores: VectorStores
+    knowledge_bases: KnowledgeBases
     skills: Skills
     stats: Stats
 
@@ -100,7 +100,7 @@ class PrismeAI:
 
         # Storage resources
         self.files = Files(client, STORAGE_SLUG)
-        self.vector_stores = VectorStores(client, STORAGE_SLUG)
+        self.knowledge_bases = KnowledgeBases(client, STORAGE_SLUG)
         self.skills = Skills(client, STORAGE_SLUG)
         self.stats = Stats(client, STORAGE_SLUG)
 
