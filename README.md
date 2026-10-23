@@ -198,6 +198,9 @@ client.knowledge_bases.documents.add(kb["id"], source_url="https://example.com/f
 doc = client.knowledge_bases.documents.get(kb["id"], doc["id"])
 print(doc["status"])  # queued, in_progress, completed, failed, ...
 
+# Link to the document's source; an uploaded file's link expires at `expires_at`, resolve it again after
+url = client.knowledge_bases.documents.source_url(kb["id"], doc["id"])["url"]
+
 # List and filter
 kbs = client.knowledge_bases.list(scope="owned", search="handbook")
 failed = client.knowledge_bases.documents.list(kb["id"], status="failed", tags={"team": "docs"})

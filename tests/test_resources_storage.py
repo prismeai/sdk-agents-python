@@ -221,6 +221,11 @@ class TestKBDocuments:
         assert isinstance(page, SyncCursorPage)
         assert page._path == f"{KB}/vs_1/documents/vsf_1/chunks"
 
+    def test_source_url(self):
+        client = _mock_client()
+        KBDocuments(client, WS).source_url("vs_1", "vsf_1")
+        client.get.assert_called_once_with(f"{KB}/vs_1/documents/vsf_1/source_url")
+
     def test_reindex(self):
         client = _mock_client()
         KBDocuments(client, WS).reindex("vs_1", "vsf_1")

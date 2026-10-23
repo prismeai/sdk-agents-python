@@ -47,6 +47,9 @@ class KBDocuments:
         self._client.delete(self._path("knowledge_bases", knowledge_base_id, "documents", document_id))
     def chunks(self, knowledge_base_id: str, document_id: str) -> SyncCursorPage[Any]:
         return SyncCursorPage(self._client, "GET", self._path("knowledge_bases", knowledge_base_id, "documents", document_id, "chunks"))
+    def source_url(self, knowledge_base_id: str, document_id: str) -> Any:
+        """Resolve a link to the document's source; an uploaded file's link expires (`expires_at`), resolve again after."""
+        return self._client.get(self._path("knowledge_bases", knowledge_base_id, "documents", document_id, "source_url"))
     def reindex(self, knowledge_base_id: str, document_id: str, **kwargs: Any) -> Any:
         return self._client.post(self._path("knowledge_bases", knowledge_base_id, "documents", document_id, "reindex"), json=kwargs)
 
@@ -93,5 +96,8 @@ class AsyncKBDocuments:
         await self._client.delete(self._path("knowledge_bases", knowledge_base_id, "documents", document_id))
     def chunks(self, knowledge_base_id: str, document_id: str) -> AsyncCursorPage[Any]:
         return AsyncCursorPage(self._client, "GET", self._path("knowledge_bases", knowledge_base_id, "documents", document_id, "chunks"))
+    async def source_url(self, knowledge_base_id: str, document_id: str) -> Any:
+        """Resolve a link to the document's source; an uploaded file's link expires (`expires_at`), resolve again after."""
+        return await self._client.get(self._path("knowledge_bases", knowledge_base_id, "documents", document_id, "source_url"))
     async def reindex(self, knowledge_base_id: str, document_id: str, **kwargs: Any) -> Any:
         return await self._client.post(self._path("knowledge_bases", knowledge_base_id, "documents", document_id, "reindex"), json=kwargs)
