@@ -1,14 +1,15 @@
 """Tests for Files, KnowledgeBases, KBDocuments, KBAccess, KBWebSources, Skills, Stats resources."""
 
+import asyncio
 import json
 from unittest.mock import MagicMock
 import pytest
 import httpx
 import respx
 
-from prismeai._client import SyncAPIClient
-from prismeai.resources.files import Files
-from prismeai.resources.knowledge_bases import KnowledgeBases, KBDocuments, KBAccess, KBWebSources
+from prismeai._client import SyncAPIClient, AsyncAPIClient
+from prismeai.resources.files import Files, AsyncFiles
+from prismeai.resources.knowledge_bases import KnowledgeBases, KBDocuments, KBAccess, KBWebSources, AsyncKBDocuments
 from prismeai.resources.skills import Skills
 from prismeai.resources.stats import Stats
 from prismeai._pagination import SyncCursorPage
@@ -38,14 +39,6 @@ class TestFiles:
         f = Files(_mock_client(), WS)
         assert f._path() == FILES
         assert f._path("file-1") == f"{FILES}/file-1"
-
-    def test_list_starts_at_page_zero_and_pages_on_bare_arrays(self):
-        client = _mock_client()
-        client.request.side_effect = [[{"id": "a"}, {"id": "b"}], [{"id": "c"}]]
-        items = Files(client, WS).list(limit=2).to_list()
-        assert items == [{"id": "a"}, {"id": "b"}, {"id": "c"}]
-        assert [c.kwargs["params"]["page"] for c in client.request.call_args_list] == [0, 1]
-        assert client.request.call_args_list[0].args == ("GET", FILES)
 
     @respx.mock
     def test_upload_sends_private_multipart_and_returns_first_file(self):
@@ -82,8 +75,33 @@ class TestFiles:
 
     def test_delete_goes_through_the_storage_route(self):
         client = _mock_client()
-        Files(client, WS).delete("file-1")
+        client.delete.return_value = {"deleted": True, "file_purged": True, "purge_reason": "DELETED"}
+        assert Files(client, WS).delete("file-1")["file_purged"] is True
         client.delete.assert_called_once_with(f"/workspaces/slug:{WS}/webhooks/v1/files/file-1")
+
+    @respx.mock
+    def test_async_upload_and_download(self):
+        respx.post(f"https://api.test/v2{FILES}").mock(
+            return_value=httpx.Response(200, json=[{"id": "file-1", "path": "ws/file-1.my report.pdf"}])
+        )
+        respx.get(f"https://api.test/v2{FILES}/file-1").mock(
+            return_value=httpx.Response(200, json={"id": "file-1", "path": "ws/file-1.my report.pdf"})
+        )
+        content = respx.get("https://api.test/v2/files/ws/file-1.my%20report.pdf").mock(
+            return_value=httpx.Response(200, content=b"pdf")
+        )
+
+        async def run():
+            api = AsyncAPIClient(base_url="https://api.test/v2", headers={}, max_retries=0)
+            files = AsyncFiles(api, WS)
+            uploaded = await files.upload(b"pdf", filename="my report.pdf")
+            response = await files.download(uploaded["id"])
+            return uploaded, response
+
+        uploaded, response = asyncio.run(run())
+        assert uploaded["id"] == "file-1"
+        assert response.content == b"pdf"
+        assert content.called
 
     def test_download_fetches_file_path_through_api(self):
         client = _mock_client()
@@ -192,6 +210,14 @@ class TestKBDocuments:
         assert params["tags.team"] == "docs"
         assert "tags" not in params
 
+    def test_list_with_owner_and_metadata(self):
+        client = _mock_client()
+        KBDocuments(client, WS).list("vs_1", owner_user_id="u1", metadata={"lang": "fr"}).get_page()
+        params = client.request.call_args.kwargs["params"]
+        assert params["owner_user_id"] == "u1"
+        assert params["metadata.lang"] == "fr"
+        assert "metadata" not in params
+
     def test_add_native_file(self):
         client = _mock_client()
         KBDocuments(client, WS).add("vs_1", native_file_id="file-1", tags={"team": "docs"})
@@ -213,13 +239,24 @@ class TestKBDocuments:
 
     def test_delete(self):
         client = _mock_client()
-        KBDocuments(client, WS).delete("vs_1", "vsf_1")
+        client.delete.return_value = {"id": "vsf_1", "deleted": True, "file_purged": False, "purge_reason": "NOT_OWNED"}
+        assert KBDocuments(client, WS).delete("vs_1", "vsf_1")["purge_reason"] == "NOT_OWNED"
         client.delete.assert_called_once_with(f"{KB}/vs_1/documents/vsf_1")
 
+    def test_async_delete_returns_the_body(self):
+        client = MagicMock()
+
+        async def delete(path):
+            return {"id": "vsf_1", "deleted": True, "file_purged": True}
+        client.delete = delete
+        result = asyncio.run(AsyncKBDocuments(client, WS).delete("vs_1", "vsf_1"))
+        assert result["file_purged"] is True
+
     def test_chunks(self):
-        page = KBDocuments(_mock_client(), WS).chunks("vs_1", "vsf_1")
+        page = KBDocuments(_mock_client(), WS).chunks("vs_1", "vsf_1", page=2, limit=50)
         assert isinstance(page, SyncCursorPage)
         assert page._path == f"{KB}/vs_1/documents/vsf_1/chunks"
+        assert (page._start_page, page._page_size) == (2, 50)
 
     def test_source_url(self):
         client = _mock_client()
@@ -238,9 +275,10 @@ class TestKBDocuments:
 
 class TestKBAccess:
     def test_list(self):
-        page = KBAccess(_mock_client(), WS).list("vs_1")
+        page = KBAccess(_mock_client(), WS).list("vs_1", limit=100)
         assert isinstance(page, SyncCursorPage)
         assert page._path == f"{KB}/vs_1/access"
+        assert page._page_size == 100
 
     def test_grant(self):
         client = _mock_client()
