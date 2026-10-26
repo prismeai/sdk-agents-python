@@ -19,10 +19,10 @@ client = PrismeAI(api_key="sk-...")
 ## Authentication
 
 ```python
-# API Key (recommended for server-side)
+# API Key (recommended for server-side Agent Factory calls)
 client = PrismeAI(api_key="sk-...")
 
-# Bearer Token (for user-scoped access)
+# Bearer Token (for user-scoped access; required by storage)
 client = PrismeAI(bearer_token="eyJ...")
 
 # Self-hosted instance
@@ -33,6 +33,10 @@ client = PrismeAI(
 ```
 
 Environment variables `PRISMEAI_API_KEY` and `PRISMEAI_BEARER_TOKEN` are also supported.
+
+Storage resources (`files`, `knowledge_bases`) act on behalf of a user, so call them with a
+`bearer_token`: with an `api_key` alone, a knowledge base gets no owner and an uploaded file no
+uploader, which keeps it from ever being deleted through `files.delete`.
 
 ## Sync and Async
 
@@ -164,8 +168,7 @@ client.tasks.cancel("agent-id", "task-id")
 
 ### Files (Storage)
 
-Files are uploaded privately to the Storage workspace and belong to the authenticated user, so use
-`bearer_token`: an `api_key` alone does not identify a user.
+Files are uploaded privately to the Storage workspace and belong to the authenticated user.
 
 ```python
 # Upload a file (path, bytes, file object or (name, data) tuple), with optional metadata
@@ -177,9 +180,12 @@ data = client.files.download(file["id"]).content
 ```
 
 `client.files.delete()` deletes a file you uploaded that no document uses; it answers 409 while a
-document does. To remove an indexed file, delete its document from the knowledge base
-(`client.knowledge_bases.documents.delete`): the uploaded file is removed with it once no other
-document uses it. `client.files.list()` requires edit rights on the Storage workspace.
+document does. Call it when `documents.add` refuses an upload, or the file stays behind. To remove
+an indexed file, delete its document from the knowledge base (`client.knowledge_bases.documents.delete`).
+
+Deleting a document, or a whole knowledge base, deletes each uploaded file with it when no other
+document uses the file and the document's owner uploaded it. `documents.delete` returns
+`file_purged` and `purge_reason` to tell.
 
 ### Knowledge Bases (Storage)
 
@@ -220,8 +226,8 @@ client.knowledge_bases.web_sources.add(kb["id"], url="https://example.com/docs")
 # Share
 client.knowledge_bases.access.grant(kb["id"], principal_type="user", principal_id="user-id", role="reader")
 
-# Remove a document, with its uploaded file once no other document uses it
-client.knowledge_bases.documents.delete(kb["id"], doc["id"])
+# Remove a document; `file_purged` says whether its uploaded file went with it
+result = client.knowledge_bases.documents.delete(kb["id"], doc["id"])
 ```
 
 ### Pagination
@@ -241,6 +247,8 @@ print(first_page.data, first_page.total)
 # Collect all into list
 all_agents = client.agents.list().to_list()
 ```
+
+Storage lists cap `limit` at 100.
 
 ### Error Handling
 
@@ -294,18 +302,23 @@ asyncio.run(main())
 ## Migrating from 0.2
 
 Version 0.3 moves storage resources to the Knowledge Bases API. `client.vector_stores` is removed;
-existing vector store ids (`vs_...`) are valid knowledge base ids.
+existing vector store ids (`vs_...`) are valid knowledge base ids. `files.delete` needs a platform
+release that includes its storage route: an older one answers 404.
+
+File ids are not document ids: list a knowledge base's documents with `documents.list` to get the
+`vsf_...` ids that `documents.get/update/delete/reindex` take.
 
 | 0.2 | 0.3 |
 |-----|-----|
 | `vector_stores.list/create/get/update/delete/search` | `knowledge_bases.list/create/get/update/delete/search` |
 | `vector_stores.reindex(id)` | `knowledge_bases.reindex(id, **options)`, returns the dispatch status |
-| `vector_stores.crawl_status` / `recrawl` | `knowledge_bases.web_sources.list/add/get/delete`; new pages are discovered on the crawl schedule |
-| `vector_stores.files.list/add/get/delete` | `knowledge_bases.documents.list/add/get/update/delete` |
+| `vector_stores.crawl_status(id)` | `knowledge_bases.get(id, include="processing")["processing"]` |
+| `vector_stores.recrawl(id)` | Removed: register crawl sources with `knowledge_bases.web_sources.add` and set `crawl_settings.periodicity`; `reindex` re-fetches known pages |
+| `vector_stores.files.list/add/get/delete(id, file_id)` | `knowledge_bases.documents.list/add/get/update/delete(id, document_id)` |
 | `vector_stores.files.chunks` | `knowledge_bases.documents.chunks`, now an auto-paginating iterable |
 | `vector_stores.files.reindex(id, file_id)` | `knowledge_bases.documents.reindex(id, document_id, **options)`, returns the document |
 | `vector_stores.access.list/grant/revoke` | `knowledge_bases.access.list/grant/revoke`, plus `update(id, principal_type, principal_id, role=...)` to change a role |
-| `files.list(page=..., limit=...)` | `files.list(limit=...)` |
+| `files.list(page=..., limit=...)` | Removed: the files API lists every user's files and only to the storage workspace's owners; list a knowledge base's documents instead |
 
 Request bodies use the Knowledge Bases API field names: `native_file_id` or `source_url` to add a
 document, `principal_type`, `principal_id` and `role` to grant access. `files.upload` returns the
@@ -322,7 +335,7 @@ and `VSAccessEntry` become `KnowledgeBase`, `KnowledgeBaseCreate`, `KnowledgeBas
 |--------|------|---------|-------------|
 | `api_key` | `str` | `PRISMEAI_API_KEY` env | API key for authentication |
 | `bearer_token` | `str` | `PRISMEAI_BEARER_TOKEN` env | Bearer token for auth |
-| `base_url` | `str` | `https://api.prisme.ai/v2` | API base URL (for self-hosted) |
+| `base_url` | `str` | `https://api.studio.prisme.ai/v2` | API base URL (for self-hosted) |
 | `timeout` | `float` | `60.0` | Request timeout in seconds |
 | `max_retries` | `int` | `2` | Max retries on 429/5xx |
 
