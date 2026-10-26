@@ -41,8 +41,10 @@ class KnowledgeBases:
         return self._client.get(self._path("knowledge_bases", knowledge_base_id), params={"include": include})
     def update(self, knowledge_base_id: str, **kwargs: Any) -> Any:
         return self._client.patch(self._path("knowledge_bases", knowledge_base_id), json=kwargs)
-    def delete(self, knowledge_base_id: str) -> None:
-        self._client.delete(self._path("knowledge_bases", knowledge_base_id))
+    def delete(self, knowledge_base_id: str) -> Any:
+        """Delete a knowledge base in the background, with its documents. Each document's uploaded file
+        is deleted too when no other document uses it and the document's owner uploaded it."""
+        return self._client.delete(self._path("knowledge_bases", knowledge_base_id))
     def search(self, knowledge_base_id: str, **kwargs: Any) -> Any:
         return self._client.post(self._path("knowledge_bases", knowledge_base_id, "search"), json=kwargs)
     def reindex(self, knowledge_base_id: str, **kwargs: Any) -> Any:
@@ -82,8 +84,10 @@ class AsyncKnowledgeBases:
         return await self._client.get(self._path("knowledge_bases", knowledge_base_id), params={"include": include})
     async def update(self, knowledge_base_id: str, **kwargs: Any) -> Any:
         return await self._client.patch(self._path("knowledge_bases", knowledge_base_id), json=kwargs)
-    async def delete(self, knowledge_base_id: str) -> None:
-        await self._client.delete(self._path("knowledge_bases", knowledge_base_id))
+    async def delete(self, knowledge_base_id: str) -> Any:
+        """Delete a knowledge base in the background, with its documents. Each document's uploaded file
+        is deleted too when no other document uses it and the document's owner uploaded it."""
+        return await self._client.delete(self._path("knowledge_bases", knowledge_base_id))
     async def search(self, knowledge_base_id: str, **kwargs: Any) -> Any:
         return await self._client.post(self._path("knowledge_bases", knowledge_base_id, "search"), json=kwargs)
     async def reindex(self, knowledge_base_id: str, **kwargs: Any) -> Any:
