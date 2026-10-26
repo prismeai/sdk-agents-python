@@ -13,9 +13,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from prismeai import PrismeAI, FileAttachment
 
 # ── Config ──────────────────────────────────────────────────────
+# Storage needs a user, so a bearer token wins over an API key.
+_bearer = os.environ.get("PRISMEAI_BEARER_TOKEN")
 client = PrismeAI(
-    api_key=os.environ.get("PRISMEAI_API_KEY"),
-    environment=os.environ.get("PRISMEAI_ENV", "sandbox"),
+    bearer_token=_bearer,
+    api_key=None if _bearer else os.environ.get("PRISMEAI_API_KEY"),
+    base_url=os.environ.get("PRISMEAI_BASE_URL"),
 )
 
 agent_id = None
@@ -590,12 +593,13 @@ def test_files():
 
     test("files.download", _download)
 
-    skip("files.list", "requires edit rights on the storage workspace")
     def _delete():
         if not file_id:
             log("Skipped — no fileId")
             return
-        client.files.delete(file_id)
+        result = client.files.delete(file_id)
+        if not result.get("file_purged"):
+            raise Exception(f"File kept: {result.get('purge_reason')}")
         log("Deleted", {"id": file_id})
 
     test("files.delete", _delete)
@@ -803,7 +807,7 @@ def cleanup():
 def main():
     print("🚀 Prisme.ai Python SDK — Full Feature Test")
     print("═" * 50)
-    print(f"Environment: {os.environ.get('PRISMEAI_ENV', 'sandbox')}")
+    print(f"API: {os.environ.get('PRISMEAI_BASE_URL', 'default')}")
     print(f"API Key: {'✅ set' if os.environ.get('PRISMEAI_API_KEY') else '❌ missing!'}")
     print("═" * 50)
 
