@@ -29,6 +29,11 @@ class PageResponse(Generic[T]):
         self.has_more = has_more
 
 
+def _parse_pagination_int(value: Any) -> Optional[int]:
+    """Normalize integer strings without coercing other response values."""
+    return int(value) if isinstance(value, str) else value
+
+
 def default_extractor(body: Any) -> PageResponse[Any]:
     """Default response extractor for paginated endpoints."""
     if isinstance(body, list):
@@ -38,9 +43,9 @@ def default_extractor(body: Any) -> PageResponse[Any]:
         return PageResponse(data=[], has_more=False)
 
     data = body.get("results") or body.get("data") or body.get("items") or body.get("documents") or []
-    total = body.get("total")
-    page = body.get("page")
-    limit = body.get("limit")
+    total = _parse_pagination_int(body.get("total"))
+    page = _parse_pagination_int(body.get("page"))
+    limit = _parse_pagination_int(body.get("limit"))
     has_more = body.get("hasMore", body.get("has_more"))
 
     if has_more is None and total is not None and page is not None and limit is not None:

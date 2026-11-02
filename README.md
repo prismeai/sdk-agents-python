@@ -250,6 +250,9 @@ all_agents = client.agents.list().to_list()
 
 Storage lists cap `limit` at 100.
 
+Pagination metadata (`total`, `page`, `limit`) is normalized to integers when the
+API returns integer strings. Invalid integer strings raise `ValueError`.
+
 ### Error Handling
 
 ```python
